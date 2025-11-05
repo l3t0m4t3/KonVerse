@@ -5,7 +5,6 @@ import colorsys
 import sqlite3
 from datetime import datetime
 
-# === CONEXÃO E CONFIGURAÇÃO DO BANCO ===
 con = sqlite3.connect("KonVerse.db", check_same_thread=False)
 cur = con.cursor()
 
@@ -30,7 +29,6 @@ cur.execute("""
 con.commit()
 
 
-# === FUNÇÃO AUXILIAR PARA GERAR COR ===
 def gerar_cor_do_nome(nome: str):
     hash_nome = int(hashlib.md5(nome.encode()).hexdigest(), 16)
     hue = (hash_nome % 360) / 360.0
@@ -38,7 +36,6 @@ def gerar_cor_do_nome(nome: str):
     return f"rgb({int(r*255)}, {int(g*255)}, {int(b*255)})"
 
 
-# === HANDLER DE LOGIN ===
 class LoginHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -60,7 +57,6 @@ class LoginHandler(tornado.web.RequestHandler):
                 self.write({"error": "Nome e senha são obrigatórios"})
                 return
 
-            # Verifica se o usuário existe
             cur.execute("SELECT id, senha FROM usuarios WHERE nome = ?", (nome,))
             user = cur.fetchone()
 
@@ -84,7 +80,6 @@ class LoginHandler(tornado.web.RequestHandler):
             self.write({"error": "Erro interno no servidor"})
 
 
-# === HANDLER DE MENSAGENS ===
 class MensagensHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -142,7 +137,7 @@ class MensagensHandler(tornado.web.RequestHandler):
             self.write({"error": "Erro ao enviar mensagem"})
 
 
-# === APLICAÇÃO ===
+
 def make_app():
     return tornado.web.Application([
         (r"/login", LoginHandler),
@@ -155,3 +150,4 @@ if __name__ == "__main__":
     app.listen(5000)
     print("Servidor Tornado rodando em http://127.0.0.1:5000")
     tornado.ioloop.IOLoop.current().start()
+

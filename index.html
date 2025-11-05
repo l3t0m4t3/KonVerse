@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>KonVerse - Chat</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 30px auto; }
+    #mensagens { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; }
+    input, button { padding: 8px; margin-top: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h2>KonVerse</h2>
+  <div id="mensagens"></div>
+  <input type="text" id="texto" placeholder="Digite uma mensagem...">
+  <button onclick="enviarMensagem()">Enviar</button>
+
+  <script>
+    const API_URL = "http://127.0.0.1:5000/mensagens";
+    const nome = localStorage.getItem("nome");
+    const id_usuario = localStorage.getItem("id_usuario");
+
+    if (!id_usuario) {
+      alert("Você precisa fazer login primeiro!");
+      window.location.href = "login.html";
+    }
+
+    async function carregarMensagens() {
+      const resp = await fetch(API_URL);
+      const dados = await resp.json();
+      const mensagens = dados.mensagens || [];
+
+      const div = document.getElementById("mensagens");
+      div.innerHTML = mensagens
+        .map(m => `<p><b style="color:${m.cor}">${m.usuario}:</b> ${m.texto} <small>(${m.hora})</small></p>`)
+        .join("");
+      div.scrollTop = div.scrollHeight;
+    }
+
+    async function enviarMensagem() {
+      const texto = document.getElementById("texto").value.trim();
+      if (!texto) return;
+
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_usuario, texto })
+      });
+
+      document.getElementById("texto").value = "";
+      carregarMensagens();
+    }
+
+    setInterval(carregarMensagens, 2000);
+    carregarMensagens();
+  </script>
+</body>
+</html>

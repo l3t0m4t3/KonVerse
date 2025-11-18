@@ -4,51 +4,112 @@
   <meta charset="UTF-8">
   <title>KonVerse - Chat</title>
   <style>
-    body { font-family: sans-serif; max-width: 500px; margin: 30px auto; }
-    #mensagens { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; }
-    input, button { padding: 8px; margin-top: 10px; width: 100%; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background-color: pink;
+    }
+
+    h2 { text-align: center; color: #333; }
+
+    #mensagens {
+      border: 1px solid #ccc;
+      background: white;
+      height: 350px;
+      overflow-y: auto;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-right: 5px;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover { background-color: #45a049; }
+
+    small { color: #888; font-size: 0.8em; }
+
+    #sair { background-color: #e74c3c; float: right; }
+    #sair:hover { background-color: #c0392b; }
   </style>
 </head>
 <body>
   <h2>KonVerse</h2>
+  <button id="sair" onclick="sair()">Sair</button>
+
   <div id="mensagens"></div>
-  <input type="text" id="texto" placeholder="Digite uma mensagem...">
-  <button onclick="enviarMensagem()">Enviar</button>
+
+  <div style="display:flex;">
+    <input type="text" id="texto" placeholder="Digite uma mensagem...">
+    <button onclick="enviarMensagem()">Enviar</button>
+  </div>
 
   <script>
-    const API_URL = "http://127.0.0.1:5000/mensagens";
+    const SERVER_URL = "http://" + window.location.hostname + ":5050";
     const nome = localStorage.getItem("nome");
     const id_usuario = localStorage.getItem("id_usuario");
 
     if (!id_usuario) {
       alert("Você precisa fazer login primeiro!");
-      window.location.href = "login.html";
+      window.location.href = "/";
     }
 
     async function carregarMensagens() {
-      const resp = await fetch(API_URL);
-      const dados = await resp.json();
-      const mensagens = dados.mensagens || [];
+      try {
+        const resp = await fetch(`${SERVER_URL}/mensagens`);
+        const dados = await resp.json();
+        const mensagens = dados.mensagens || [];
 
-      const div = document.getElementById("mensagens");
-      div.innerHTML = mensagens
-        .map(m => `<p><b style="color:${m.cor}">${m.usuario}:</b> ${m.texto} <small>(${m.hora})</small></p>`)
-        .join("");
-      div.scrollTop = div.scrollHeight;
+        const div = document.getElementById("mensagens");
+        div.innerHTML = mensagens
+          .map(m => `<p><b style="color:${m.cor}">${m.usuario}:</b> ${m.texto} <small>(${m.hora})</small></p>`)
+          .join("");
+
+        div.scrollTop = div.scrollHeight;
+      } catch (err) {
+        console.error("Erro ao carregar mensagens:", err);
+      }
     }
 
     async function enviarMensagem() {
       const texto = document.getElementById("texto").value.trim();
       if (!texto) return;
 
-      await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_usuario, texto })
-      });
+      try {
+        await fetch(`${SERVER_URL}/mensagens`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id_usuario, texto })
+        });
+        document.getElementById("texto").value = "";
+        carregarMensagens();
+      } catch (err) {
+        console.error("Erro ao enviar mensagem:", err);
+      }
+    }
 
-      document.getElementById("texto").value = "";
-      carregarMensagens();
+    function sair() {
+      localStorage.clear();
+      window.location.href = "/";
     }
 
     setInterval(carregarMensagens, 2000);
